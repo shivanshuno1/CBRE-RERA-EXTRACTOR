@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-// Configure axios base URL
 const API_BASE_URL = 'http://localhost:5000/api';
 
 function App() {
@@ -12,25 +11,36 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [states, setStates] = useState([]);
+  const [backendConnected, setBackendConnected] = useState(false);
+  const [filters, setFilters] = useState({
+    type: 'building',       // for Tamil Nadu
+    status: 'ongoing',      // for Madhya Pradesh
+    region: 'panchkula'     // for Haryana
+  });
 
-  // Load states on component mount
-  React.useEffect(() => {
+  // Load states from backend
+  useEffect(() => {
     loadStates();
   }, []);
 
   const loadStates = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/scraper/states`);
+      const response = await axios.get(`${API_BASE_URL}/scraper/states`, {
+        timeout: 5000
+      });
       setStates(response.data.states);
+      setBackendConnected(true);
+      showMessage('Connected to backend successfully!', 'success');
     } catch (error) {
       console.error('Failed to load states:', error);
-      showMessage('Failed to connect to backend. Make sure server is running.', 'error');
+      setBackendConnected(false);
+      showMessage('Cannot connect to backend. Make sure server is running on port 5000', 'error');
     }
   };
 
   const showMessage = (text, type) => {
     setMessage({ text, type });
-    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    setTimeout(() => setMessage({ text: '', type: '' }), 4000);
   };
 
   const handleExtract = async () => {
@@ -44,22 +54,18 @@ function App() {
       const response = await axios.post(`${API_BASE_URL}/scraper/extract`, {
         state: selectedState,
         maxRecords: parseInt(maxRecords),
-        filters: {}
+        filters: filters
       });
 
       if (response.data.success) {
         setExtractedData(response.data.data);
-        showMessage(`Successfully extracted ${response.data.records} records from ${selectedState}`, 'success');
+        showMessage(`✅ Extracted ${response.data.records} records from ${selectedState}`, 'success');
       } else {
         showMessage('Extraction failed', 'error');
       }
     } catch (error) {
       console.error('Extraction error:', error);
-      if (error.code === 'ERR_NETWORK') {
-        showMessage('Cannot connect to backend. Please make sure the server is running on port 5000', 'error');
-      } else {
-        showMessage(error.response?.data?.error || 'Failed to extract data', 'error');
-      }
+      showMessage(error.response?.data?.error || error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -82,13 +88,13 @@ function App() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `rera_${selectedState.replace(/\s/g, '_')}_${Date.now()}.csv`);
+      link.setAttribute('download', `rera_${selectedState.replace(/\s/g, '_')}_${Date.now()}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      showMessage('File downloaded successfully', 'success');
+      showMessage('📥 File downloaded', 'success');
     } catch (error) {
       console.error('Download error:', error);
       showMessage('Failed to download file', 'error');
@@ -105,9 +111,71 @@ function App() {
     showMessage(`${field} copied to clipboard`, 'success');
   };
 
+  // Filter options for specific states
+  const renderStateSpecificFilters = () => {
+    if (selectedState === 'Tamil Nadu') {
+      return (
+        <div className="form-group">
+          <label className="label">Project Type:</label>
+          <select
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            className="select"
+          >
+            <option value="building">Building Projects</option>
+            <option value="normalLayout">Normal Layout Projects</option>
+            <option value="regularisationLayout">Regularisation Layout Projects</option>
+          </select>
+        </div>
+      );
+    }
+
+    if (selectedState === 'Madhya Pradesh') {
+      return (
+        <div className="form-group">
+          <label className="label">Project Status:</label>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            className="select"
+          >
+            <option value="ongoing">Ongoing Projects</option>
+            <option value="completed">Completed Projects</option>
+            <option value="extended">Extended Projects</option>
+            <option value="withdrawn">Withdrawn Projects</option>
+            <option value="revoked">Revoked Projects</option>
+          </select>
+        </div>
+      );
+    }
+
+    if (selectedState === 'Haryana') {
+      return (
+        <div className="form-group">
+          <label className="label">Region:</label>
+          <select
+            value={filters.region}
+            onChange={(e) => setFilters({ ...filters, region: e.target.value })}
+            className="select"
+          >
+            <option value="panchkula">Panchkula</option>
+            <option value="gurugram">Gurugram</option>
+          </select>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="container">
-      {/* Toast Message */}
+      {!backendConnected && (
+        <div className="connection-warning">
+          ⚠️ Cannot connect to backend. Please start the server with: node server.js
+        </div>
+      )}
+      
       {message.text && (
         <div className={`toast toast-${message.type}`}>
           {message.text}
@@ -126,6 +194,7 @@ function App() {
             value={selectedState} 
             onChange={(e) => setSelectedState(e.target.value)}
             className="select"
+            disabled={!backendConnected}
           >
             <option value="">-- Choose a state --</option>
             {states.map(state => (
@@ -133,6 +202,8 @@ function App() {
             ))}
           </select>
         </div>
+
+        {renderStateSpecificFilters()}
 
         <div className="form-group">
           <label className="label">Max Records:</label>
@@ -143,6 +214,7 @@ function App() {
             className="input"
             min="1"
             max="1000"
+            disabled={!backendConnected}
           />
           <span className="helper-text">Number of records to extract (max 1000)</span>
         </div>
@@ -150,7 +222,7 @@ function App() {
         <div className="button-group">
           <button 
             onClick={handleExtract} 
-            disabled={loading || !selectedState}
+            disabled={loading || !selectedState || !backendConnected}
             className={loading ? 'button-disabled' : 'button-primary'}
           >
             {loading ? '⏳ Extracting...' : '🚀 Start Extraction'}
@@ -162,7 +234,7 @@ function App() {
                 onClick={handleDownload}
                 className="button-secondary"
               >
-                📥 Download CSV
+                📥 Download Excel
               </button>
               <button 
                 onClick={clearData}
@@ -214,7 +286,7 @@ function App() {
                           📋
                         </button>
                       </div>
-                      {record.url && record.url !== '#' && (
+                      {record.url && record.url !== 'N/A' && (
                         <a href={record.url} target="_blank" rel="noopener noreferrer" className="link">
                           🔗 View Details
                         </a>
