@@ -158,3 +158,39 @@
 {"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:39:56"}
 {"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:46:39"}
 {"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:46:49"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:51:39"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:52:00"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:53:47"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:54:08"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 8 records","service":"rera-extractor","timestamp":"2026-04-01 13:55:13"}
+{"level":"info","message":"Extracted 8 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 13:55:20"}
+{"level":"info","message":"Starting extraction for Andhra Pradesh with max 8 records","service":"rera-extractor","timestamp":"2026-04-01 13:56:37"}
+{"level":"info","message":"Extracted 8 records for Andhra Pradesh","service":"rera-extractor","timestamp":"2026-04-01 13:57:08"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 8 records","service":"rera-extractor","timestamp":"2026-04-01 13:57:37"}
+{"level":"info","message":"Extracted 8 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 13:57:42"}
+{"level":"info","message":"Starting extraction for Bihar with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 14:06:55"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:07:09"}
+{"level":"info","message":"Starting extraction for Bihar with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 14:08:05"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:08:08"}
+{"level":"info","message":"Starting extraction for Bihar with max 11 records","service":"rera-extractor","timestamp":"2026-04-01 14:12:46"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:13:17"}
+{"level":"info","message":"Starting extraction for Bihar with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 14:15:18"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:15:21"}
+{"level":"info","message":"Starting extraction for Bihar with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 14:21:07"}
+{"level":"info","message":"Extracted 1 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:21:11"}
+{"level":"info","message":"Starting extraction for Bihar with max 120 records","service":"rera-extractor","timestamp":"2026-04-01 14:21:24"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:21:29"}
+{"level":"info","message":"Starting extraction for Bihar with max 17 records","service":"rera-extractor","timestamp":"2026-04-01 14:21:38"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:21:42"}
+{"level":"info","message":"Starting extraction for Bihar with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 14:21:45"}
+{"level":"info","message":"Extracted 1 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 14:21:56"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 14:39:07"}
+{"level":"info","message":"Extracted 12 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 14:39:15"}
+{"level":"info","message":"Starting extraction for Haryana with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 14:39:51"}
+{"level":"info","message":"Extracted 12 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 14:40:11"}
+{"level":"info","message":"Starting extraction for Bihar with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 15:15:56"}
+{"level":"info","message":"Extracted 1 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 15:16:00"}
+{"level":"info","message":"Starting extraction for Bihar with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 15:27:02"}
+{"level":"info","message":"Extracted 1 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 15:27:13"}
+{"level":"info","message":"Starting extraction for Bihar with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 15:30:51"}
+{"level":"info","message":"Extracted 0 records for Bihar","service":"rera-extractor","timestamp":"2026-04-01 15:30:56"}
