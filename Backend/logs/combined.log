@@ -128,3 +128,33 @@
 {"level":"info","message":"Extracted 2 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 11:33:22"}
 {"level":"info","message":"Starting extraction for Tamil Nadu with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 11:40:24"}
 {"level":"info","message":"Extracted 0 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 11:40:38"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 11:44:45"}
+{"level":"info","message":"Extracted 12 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 11:44:57"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 12 records","service":"rera-extractor","timestamp":"2026-04-01 11:48:06"}
+{"level":"info","message":"Extracted 12 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-01 11:48:16"}
+{"level":"info","message":"Starting extraction for Haryana with max 1 records","service":"rera-extractor","timestamp":"2026-04-01 12:08:49"}
+{"level":"info","message":"Extracted 1 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:08:51"}
+{"level":"info","message":"Starting extraction for Haryana with max 1 records","service":"rera-extractor","timestamp":"2026-04-01 12:10:30"}
+{"level":"info","message":"Extracted 1 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:10:34"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:21:40"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:21:46"}
+{"level":"info","message":"Starting extraction for Haryana with max 1 records","service":"rera-extractor","timestamp":"2026-04-01 12:21:55"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:22:02"}
+{"level":"info","message":"Starting extraction for Haryana with max 1 records","service":"rera-extractor","timestamp":"2026-04-01 12:22:18"}
+{"level":"info","message":"Extracted 1 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:22:21"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:28:19"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:28:29"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:31:13"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:31:19"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:33:47"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:34:11"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:37:13"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:37:20"}
+{"level":"info","message":"Starting extraction for Haryana with max 1 records","service":"rera-extractor","timestamp":"2026-04-01 12:37:32"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:37:39"}
+{"level":"info","message":"Starting extraction for Haryana with max 1 records","service":"rera-extractor","timestamp":"2026-04-01 12:37:41"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:37:51"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:39:45"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:39:56"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-01 12:46:39"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-01 12:46:49"}
