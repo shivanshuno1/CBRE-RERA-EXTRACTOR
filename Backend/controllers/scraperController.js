@@ -18,15 +18,28 @@ class ScraperController {
         return res.status(400).json({ error: 'Invalid state or scraper not available' });
       }
 
-      const data = await scraper.extract(parseInt(maxRecords), filters);
+      const rawData = await scraper.extract(parseInt(maxRecords), filters);
       
-      logger.info(`Extracted ${data.length} records for ${state}`);
+      // Normalize field names to camelCase as expected by frontend DataTable
+      const normalizedData = rawData.map(project => ({
+        projectName: project.project_name || project.projectName || 'N/A',
+        promoterName: project.promoter_name || project.promoterName || 'N/A',
+        registrationNumber: project.registration_number || project.registrationNumber || 'N/A',
+        district: project.district || 'N/A',
+        status: project.status || 'Registered',
+        extractedAt: project.extracted_at || project.extractedAt || new Date().toISOString(),
+        url: project.url || null,
+        // Keep original fields for backward compatibility if needed
+        ...project
+      }));
+      
+      logger.info(`Extracted ${normalizedData.length} records for ${state}`);
       
       res.json({
         success: true,
         state,
-        records: data.length,
-        data
+        records: normalizedData.length,
+        data: normalizedData   // flat array of projects with camelCase keys
       });
     } catch (error) {
       logger.error(`Extraction error: ${error.message}`);
