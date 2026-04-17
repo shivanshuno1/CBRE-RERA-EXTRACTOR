@@ -1,228 +1,264 @@
 const BaseScraper = require('./baseScraper');
+const fs = require('fs');
+const path = require('path');
+const ExcelJS = require('exceljs');
 
-class TamilnaduScraper extends BaseScraper {
+class TamilNaduScraper extends BaseScraper {
   constructor() {
     super();
+    // TN RERA has different pages for Building, Normal Layout, Regularisation Layout.
+    // We'll focus on Normal Layout for 2025 (can be extended).
     this.urls = {
       building: 'https://rera.tn.gov.in/cms/reg_projects_tamilnadu/Building/2025.php',
       normalLayout: 'https://rera.tn.gov.in/cms/reg_projects_tamilnadu/Normal_Layout/2025.php',
       regularisationLayout: 'https://rera.tn.gov.in/registered_reglayout'
     };
+    this.downloadDir = path.join(__dirname, '../downloads');
+    if (!fs.existsSync(this.downloadDir)) {
+      fs.mkdirSync(this.downloadDir, { recursive: true });
+    }
   }
 
   async extract(maxRecords = 100, filters = {}) {
     try {
-      const type = filters.type || 'building';
+      // Default to Normal Layout if not specified
+      const type = filters.type || 'normalLayout';
       const baseUrl = this.urls[type];
       if (!baseUrl) {
         console.error(`Unknown type: ${type}`);
         return [];
       }
 
-      console.log(`🔍 Fetching ${type} projects from: ${baseUrl}`);
-      
-      const allProjects = [];
-      let currentPage = 1;
-      let hasMorePages = true;
-      
-      // Try different pagination URL patterns
-      const paginationPatterns = [
-        (url, page) => `${url}?page=${page}`,
-        (url, page) => `${url}&page=${page}`,
-        (url, page) => `${url}?pageno=${page}`,
-        (url, page) => `${url}&pageno=${page}`,
-        (url, page) => `${url}?p=${page}`,
-        (url, page) => `${url}&p=${page}`,
-        (url, page) => `${url.replace(/\.php$/, '')}_${page}.php`,
-      ];
-      
-      while (hasMorePages && allProjects.length < maxRecords) {
-        console.log(`📄 Trying to fetch page ${currentPage}...`);
-        
-        let pageContent = null;
-        let pageUrl = null;
-        
-        // Try different URL patterns until one works
-        for (const pattern of paginationPatterns) {
-          const testUrl = pattern(baseUrl, currentPage);
-          console.log(`  Trying: ${testUrl}`);
-          
-          try {
-            const $ = await this.fetchWithPuppeteer(testUrl, 'table');
-            // Check if this page has content
-            const tables = $('table');
-            let hasData = false;
-            
-            for (let i = 0; i < tables.length; i++) {
-              const rows = $(tables[i]).find('tbody tr');
-              if (rows.length > 0) {
-                hasData = true;
-                break;
-              }
+      console.log(`🔍 Scraping Tamil Nadu ${type} projects from: ${baseUrl}`);
+
+      const puppeteer = require('puppeteer');
+      const browser = await puppeteer.launch({
+        headless: false,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+
+      try {
+        const page = await browser.newPage();
+        const client = await page.target().createCDPSession();
+        await client.send('Page.setDownloadBehavior', {
+          behavior: 'allow',
+          downloadPath: this.downloadDir
+        });
+
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+        console.log(`Navigating to: ${baseUrl}`);
+        await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+        await this.delay(3000);
+
+        // Click the Excel button (may be a button or link with text "Excel")
+        const excelClicked = await page.evaluate(() => {
+          const buttons = document.querySelectorAll('button, a, .btn, input[type="button"]');
+          for (const btn of buttons) {
+            const text = (btn.innerText || btn.value || '').trim();
+            if (text === 'Excel' || text.toLowerCase() === 'excel') {
+              btn.click();
+              return true;
             }
-            
-            if (hasData) {
-              pageContent = $;
-              pageUrl = testUrl;
-              console.log(`  ✅ Success! Found data on: ${testUrl}`);
-              break;
-            }
-          } catch (err) {
-            // Continue to next pattern
-            continue;
           }
+          return false;
+        });
+
+        if (!excelClicked) {
+          console.log('❌ Excel button not found');
+          return [];
         }
-        
-        if (!pageContent) {
-          console.log(`❌ No data found for page ${currentPage}, stopping pagination`);
-          break;
+
+        console.log('✅ Excel button clicked! Waiting for download...');
+        await this.delay(10000);
+
+        // Find downloaded Excel file
+        const files = fs.readdirSync(this.downloadDir);
+        const excelFiles = files.filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
+        if (excelFiles.length === 0) {
+          console.log('❌ No Excel file found');
+          return [];
         }
-        
-        // Extract projects from this page
-        const pageProjects = this.extractProjectsFromPage(pageContent, pageUrl, type);
-        console.log(`✅ Page ${currentPage}: extracted ${pageProjects.length} projects`);
-        
-        if (pageProjects.length === 0) {
-          console.log(`No projects found on page ${currentPage}, stopping`);
-          break;
+
+        const latestFile = excelFiles
+          .map(f => ({ name: f, time: fs.statSync(path.join(this.downloadDir, f)).mtimeMs }))
+          .sort((a, b) => b.time - a.time)[0].name;
+        const filePath = path.join(this.downloadDir, latestFile);
+        console.log(`📥 Downloaded file: ${latestFile}`);
+
+        // Read Excel and extract projects
+        const projects = await this.readExcelFile(filePath);
+
+        // Filter by year (2025-2026) and optionally district (Chennai)
+        let filteredProjects = projects;
+        if (filters.yearFrom && filters.yearTo) {
+          filteredProjects = projects.filter(p => p.year && p.year >= filters.yearFrom && p.year <= filters.yearTo);
+          console.log(`📊 Projects ${filters.yearFrom}-${filters.yearTo}: ${filteredProjects.length}`);
         }
-        
-        allProjects.push(...pageProjects);
-        
-        // Check if we got fewer than 10 projects (typical page size)
-        if (pageProjects.length < 10) {
-          console.log(`Page ${currentPage} has only ${pageProjects.length} projects (< 10), assuming last page`);
-          break;
+        if (filters.district && filters.district.toLowerCase() !== 'all') {
+          filteredProjects = filteredProjects.filter(p => p.district && p.district.toLowerCase().includes(filters.district.toLowerCase()));
+          console.log(`📊 Projects in district ${filters.district}: ${filteredProjects.length}`);
         }
-        
-        currentPage++;
-        
-        // Add delay to be respectful
-        await this.delay(1500);
+
+        const finalProjects = filteredProjects.slice(0, maxRecords);
+        console.log(`✅ Returning ${finalProjects.length} projects`);
+        return finalProjects.map(p => this.formatProject(p));
+
+      } finally {
+        await browser.close();
       }
-      
-      // Limit to maxRecords
-      const finalProjects = allProjects.slice(0, maxRecords);
-      console.log(`✅ Extracted ${finalProjects.length} total projects from Tamil Nadu (${type})`);
-      return finalProjects;
-      
     } catch (error) {
       console.error('Tamil Nadu scraper error:', error);
       return [];
     }
   }
-  
+
   /**
-   * Extract projects from a loaded page
+   * Read Excel file and extract project data.
+   * Expected columns (based on screenshot): S.No, Project Registration No., Name and Address of the Promoter,
+   * Project Details and Address, Approval Details, Project Completion Date, Other Details.
    */
-  extractProjectsFromPage($, url, type) {
-    // Find all tables
-    const tables = $('table');
-    let targetTable = null;
-    let bestMatch = 0;
+  async readExcelFile(filePath) {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(filePath);
+      const worksheet = workbook.worksheets[0];
+      const projects = [];
 
-    // Find the table with the most columns and rows
-    for (let i = 0; i < tables.length; i++) {
-      const table = tables[i];
-      const rows = $(table).find('tbody tr');
-      const headers = $(table).find('thead th');
-      
-      // Score this table
-      let score = rows.length;
-      if (headers.length > 0) score += headers.length;
-      
-      if (score > bestMatch) {
-        bestMatch = score;
-        targetTable = table;
+      // Get all rows
+      const rows = [];
+      worksheet.eachRow((row, rowNumber) => {
+        const rowData = [];
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          rowData.push(cell.value ? cell.value.toString().trim() : '');
+        });
+        rows.push(rowData);
+      });
+
+      if (rows.length < 2) return [];
+
+      // Find header row (first row that looks like headers)
+      let headerRowIndex = 0;
+      let headers = [];
+      for (let i = 0; i < Math.min(5, rows.length); i++) {
+        const firstCell = rows[i][0] || '';
+        if (firstCell.includes('S.No') || firstCell.includes('Registration')) {
+          headerRowIndex = i;
+          headers = rows[i];
+          break;
+        }
       }
-    }
+      if (headers.length === 0) {
+        headers = rows[0];
+      }
 
-    if (!targetTable) {
-      console.error('No data table found');
+      // Map column indices based on typical TN RERA Excel export
+      const colMap = {
+        serialNo: this.findColumnIndex(headers, ['s.no', 'serial']),
+        regNo: this.findColumnIndex(headers, ['registration', 'reg no']),
+        promoter: this.findColumnIndex(headers, ['promoter', 'name and address']),
+        projectDetails: this.findColumnIndex(headers, ['project details', 'project name']),
+        approvalDetails: this.findColumnIndex(headers, ['approval']),
+        completionDate: this.findColumnIndex(headers, ['completion']),
+        otherDetails: this.findColumnIndex(headers, ['other'])
+      };
+
+      console.log('📊 Column mapping:', colMap);
+
+      for (let i = headerRowIndex + 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length === 0) continue;
+
+        const regNo = row[colMap.regNo] || '';
+        const promoter = row[colMap.promoter] || '';
+        let projectDetails = row[colMap.projectDetails] || '';
+        const completionDate = row[colMap.completionDate] || '';
+
+        if (!regNo && !projectDetails) continue;
+
+        // Extract project name from "Project Details and Address" column
+        let projectName = projectDetails;
+        const nameMatch = projectDetails.match(/Project Name:\s*"([^"]+)"/i);
+        if (nameMatch) projectName = nameMatch[1];
+        else if (projectDetails.includes('-')) projectName = projectDetails.split('-')[0].trim();
+
+        // Extract district from project details or address
+        let district = 'Tamil Nadu';
+        const districtMatch = projectDetails.match(/District\s*[:\-]?\s*([^,\n]+)/i);
+        if (districtMatch) district = districtMatch[1].trim();
+        else {
+          const districts = ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli', 'Erode', 'Vellore'];
+          for (const d of districts) {
+            if (projectDetails.includes(d) || promoter.includes(d)) {
+              district = d;
+              break;
+            }
+          }
+        }
+
+        // Extract year from registration number (e.g., TN/11/Layout/Offline/0001/2025)
+        let year = null;
+        const yearMatch = regNo.match(/20\d{2}/);
+        if (yearMatch) year = parseInt(yearMatch[0]);
+
+        // Determine status based on completion date
+        let status = 'Registered';
+        if (completionDate && completionDate.toLowerCase() === 'complete') status = 'Completed';
+        else if (completionDate && completionDate.toLowerCase() === 'in progress') status = 'Ongoing';
+
+        projects.push({
+          projectName: projectName || 'N/A',
+          promoterName: promoter || 'N/A',
+          registrationNumber: regNo,
+          district: district,
+          status: status,
+          projectDetails: projectDetails,
+          approvalDetails: row[colMap.approvalDetails] || '',
+          completionDate: completionDate,
+          otherDetails: row[colMap.otherDetails] || '',
+          year: year,
+          url: this.urls.normalLayout
+        });
+      }
+
+      console.log(`📊 Read ${projects.length} projects from Excel file`);
+      return projects;
+
+    } catch (error) {
+      console.error('Error reading Excel:', error);
       return [];
     }
+  }
 
-    // Get headers if available
-    const headers = $(targetTable).find('thead th').map((_, th) => $(th).text().trim()).get();
-    console.log('Headers found:', headers);
-    
-    // Determine column mapping based on header text
-    let colMap = { regNo: null, promoter: null, projectDetails: null, status: null };
-    
-    headers.forEach((header, idx) => {
-      const lower = header.toLowerCase();
-      if (lower.includes('registration') || lower.includes('reg no') || lower.includes('s.no')) {
-        colMap.regNo = idx;
-      } else if (lower.includes('promoter') || lower.includes('name')) {
-        colMap.promoter = idx;
-      } else if (lower.includes('project') || lower.includes('details') || lower.includes('address')) {
-        colMap.projectDetails = idx;
-      } else if (lower.includes('status')) {
-        colMap.status = idx;
+  findColumnIndex(headers, patterns) {
+    for (let i = 0; i < headers.length; i++) {
+      const header = headers[i] ? headers[i].toString().toLowerCase() : '';
+      for (const pattern of patterns) {
+        if (header.includes(pattern.toLowerCase())) return i;
       }
-    });
-    
-    // Fallback to index-based mapping if headers didn't match
-    if (colMap.regNo === null) colMap.regNo = 1;
-    if (colMap.promoter === null) colMap.promoter = 2;
-    if (colMap.projectDetails === null) colMap.projectDetails = 3;
-    if (colMap.status === null) colMap.status = headers.length - 1;
-    
-    console.log('Column mapping:', colMap);
-    
-    const rows = $(targetTable).find('tbody tr');
-    const projects = [];
-
-    for (let i = 0; i < rows.length; i++) {
-      const cells = $(rows[i]).find('td');
-      
-      // Skip if we don't have enough cells
-      const maxCol = Math.max(colMap.regNo, colMap.promoter, colMap.projectDetails, colMap.status);
-      if (cells.length <= maxCol) {
-        console.log(`Row ${i}: only ${cells.length} cells, need at least ${maxCol + 1}`);
-        continue;
-      }
-
-      const registrationNo = $(cells[colMap.regNo]).text().trim();
-      const promoterName = $(cells[colMap.promoter]).text().trim();
-      const projectDetails = $(cells[colMap.projectDetails]).text().trim();
-      const status = $(cells[colMap.status]).text().trim();
-
-      // Skip empty rows
-      if (!registrationNo && !projectDetails) continue;
-
-      // Extract project name (first part before hyphen or first 100 chars)
-      let projectName = projectDetails;
-      if (projectDetails.includes('-')) {
-        projectName = projectDetails.split('-')[0].trim();
-      } else if (projectDetails.length > 100) {
-        projectName = projectDetails.substring(0, 100) + '...';
-      }
-
-      // Try to extract district
-      let district = 'Tamil Nadu';
-      const districtMatch = projectDetails.match(/District[:\s]+([^,\n]+)/i);
-      if (districtMatch) district = districtMatch[1].trim();
-      
-      // Also check promoter address for district
-      const promoterMatch = promoterName.match(/(Chennai|Coimbatore|Madurai|Tiruchirappalli|Salem|Tirunelveli|Erode|Vellore)/i);
-      if (district === 'Tamil Nadu' && promoterMatch) district = promoterMatch[1];
-
-      console.log(`Row ${i}: Found project: ${projectName.substring(0, 50)}...`);
-
-      projects.push(this.formatProject({
-        name: projectName,
-        promoter: promoterName,
-        registrationNo: registrationNo,
-        district: district,
-        status: status || 'Registered',
-        url: url,
-        type: type
-      }));
     }
+    return -1;
+  }
 
-    return projects;
+  formatProject(project) {
+    return {
+      projectName: project.projectName,
+      promoterName: project.promoterName,
+      registrationNumber: project.registrationNumber,
+      district: project.district,
+      status: project.status,
+      totalArea: project.projectDetails.substring(0, 100) + (project.projectDetails.length > 100 ? '...' : ''),
+      url: project.url,
+      extractedAt: new Date().toISOString(),
+      year: project.year,
+      completionDate: project.completionDate,
+      otherDetails: project.otherDetails
+    };
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
-module.exports = TamilnaduScraper;
+module.exports = TamilNaduScraper;

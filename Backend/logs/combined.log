@@ -280,3 +280,81 @@
 {"level":"info","message":"Extracted 10 records for Bihar","service":"rera-extractor","timestamp":"2026-04-16 21:01:27"}
 {"level":"info","message":"Starting extraction for Tamil Nadu with max 3 records","service":"rera-extractor","timestamp":"2026-04-16 21:01:43"}
 {"level":"info","message":"Extracted 3 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-16 21:02:02"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 21:24:14"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 21:25:13"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 21:29:14"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 21:30:26"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 21:31:34"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 21:32:33"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 21:37:41"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 21:39:01"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 21:47:27"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 21:48:00"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 22:01:54"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 22:02:26"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 22:07:01"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 22:07:11"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-16 22:10:58"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-16 22:11:32"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 09:32:07"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 09:32:16"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 300 records","service":"rera-extractor","timestamp":"2026-04-17 10:03:33"}
+{"level":"info","message":"Extracted 300 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 10:06:32"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:12:07"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 10:12:43"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:16:57"}
+{"level":"info","message":"Extracted 0 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 10:17:19"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:17:39"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 10:18:18"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:18:54"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 10:19:30"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:20:17"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 10:20:56"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:29:12"}
+{"level":"error","message":"Extraction error: scraper.extract is not a function","service":"rera-extractor","timestamp":"2026-04-17 10:29:12"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:29:14"}
+{"level":"error","message":"Extraction error: scraper.extract is not a function","service":"rera-extractor","timestamp":"2026-04-17 10:29:14"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 10:32:22"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 10:32:52"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 11:32:11"}
+{"level":"info","message":"Starting extraction for Haryana with max 100 records","service":"rera-extractor","timestamp":"2026-04-17 11:32:44"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 11:33:01"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 11:33:53"}
+{"level":"info","message":"Starting extraction for Haryana with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 11:34:02"}
+{"level":"info","message":"Extracted 10 records for Haryana","service":"rera-extractor","timestamp":"2026-04-17 11:34:36"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 11:56:59"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 11:57:04"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 11:57:56"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 11:58:00"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:03:12"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:03:35"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:09:23"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:09:48"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:10:45"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:11:07"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:12:20"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:12:45"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:30:38"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:31:03"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:33:56"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:34:23"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:34:57"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:35:22"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:37:58"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:38:22"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:42:33"}
+{"level":"info","message":"Extracted 0 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:42:37"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:49:36"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:50:01"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:54:50"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:55:18"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 12:56:40"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 12:57:09"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 13:03:24"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 13:03:50"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 13:10:53"}
+{"level":"info","message":"Extracted 0 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 13:11:00"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 13:13:01"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 13:13:23"}
+{"level":"info","message":"Starting extraction for Tamil Nadu with max 10 records","service":"rera-extractor","timestamp":"2026-04-17 13:13:42"}
+{"level":"info","message":"Extracted 10 records for Tamil Nadu","service":"rera-extractor","timestamp":"2026-04-17 13:14:03"}

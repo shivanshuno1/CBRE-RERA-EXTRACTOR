@@ -12,7 +12,6 @@ class HaryanaScraper extends BaseScraper {
     };
     this.downloadDir = path.join(__dirname, '../downloads');
     
-    // Create downloads directory if it doesn't exist
     if (!fs.existsSync(this.downloadDir)) {
       fs.mkdirSync(this.downloadDir, { recursive: true });
     }
@@ -31,14 +30,12 @@ class HaryanaScraper extends BaseScraper {
       
       const puppeteer = require('puppeteer');
       const browser = await puppeteer.launch({ 
-        headless: false, // Set to false to see the download
+        headless: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
       
       try {
         const page = await browser.newPage();
-        
-        // Set download behavior
         const client = await page.target().createCDPSession();
         await client.send('Page.setDownloadBehavior', {
           behavior: 'allow',
@@ -49,21 +46,14 @@ class HaryanaScraper extends BaseScraper {
         
         console.log(`Navigating to: ${baseUrl}`);
         await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        
-        // Wait for page to load
         await this.delay(3000);
         
-        // Look for Excel button
-        console.log('Looking for Excel button...');
-        
-        // Click on the Excel button
+        // Click Excel button
         const excelClicked = await page.evaluate(() => {
-          // Find button with exact text "Excel"
           const buttons = document.querySelectorAll('button, a, .btn, input[type="button"]');
           for (const btn of buttons) {
             const text = (btn.innerText || btn.value || '').trim();
             if (text === 'Excel' || text.toLowerCase() === 'excel') {
-              console.log(`Found Excel button with text: "${text}"`);
               btn.click();
               return true;
             }
@@ -71,91 +61,69 @@ class HaryanaScraper extends BaseScraper {
           return false;
         });
         
-        if (excelClicked) {
-          console.log('✅ Excel button clicked! Waiting for download...');
-          
-          // Wait for download to complete (give it 10 seconds)
-          await this.delay(10000);
-          
-          // Find the downloaded Excel file
-          const files = fs.readdirSync(this.downloadDir);
-          const excelFiles = files.filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
-          
-          if (excelFiles.length === 0) {
-            console.log('❌ No Excel file found after clicking button');
-            return [];
-          }
-          
-          // Get the most recently downloaded file
-          const latestFile = excelFiles
-            .map(f => ({ 
-              name: f, 
-              time: fs.statSync(path.join(this.downloadDir, f)).mtimeMs 
-            }))
-            .sort((a, b) => b.time - a.time)[0].name;
-          
-          const filePath = path.join(this.downloadDir, latestFile);
-          console.log(`📥 Downloaded file: ${latestFile}`);
-          
-          // Read the Excel file
-          const projects = await this.readExcelFile(filePath, region);
-          
-          // Save a copy with timestamp and ID range
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const savedPath = path.join(this.downloadDir, `haryana_${region}_${timestamp}.xlsx`);
-          fs.copyFileSync(filePath, savedPath);
-          console.log(`📁 Excel file saved to: ${savedPath}`);
-          
-          // Get the ID range (first and last registration numbers)
-          if (projects.length > 0) {
-            const firstId = projects[0].registrationNo;
-            const lastId = projects[projects.length - 1].registrationNo;
-            console.log(`📊 ID Range: ${firstId} to ${lastId}`);
-            console.log(`📊 Total records: ${projects.length}`);
-          }
-          
-          // Filter projects by year (2025-2026)
-          const filteredProjects = projects.filter(project => {
-            const yearMatch = project.registrationNo?.match(/20\d{2}/);
-            if (yearMatch) {
-              const year = parseInt(yearMatch[0]);
-              return year >= 2025 && year <= 2026;
-            }
-            return false;
-          });
-          
-          console.log(`📊 Projects from 2025-2026: ${filteredProjects.length}`);
-          
-          // Sort by year
-          const sortedProjects = filteredProjects.sort((a, b) => {
-            const yearA = parseInt(a.registrationNo?.match(/20\d{2}/)?.[0] || '0');
-            const yearB = parseInt(b.registrationNo?.match(/20\d{2}/)?.[0] || '0');
-            return yearB - yearA;
-          });
-          
-          const finalProjects = sortedProjects.slice(0, maxRecords);
-          console.log(`✅ Returning ${finalProjects.length} projects`);
-          
-          return finalProjects.map(project => this.formatProject(project));
-          
-        } else {
+        if (!excelClicked) {
           console.log('❌ Excel button not found');
-          return [{
-            projectName: 'Excel button not found',
-            promoterName: 'Please check the page structure',
-            registrationNumber: 'Manual extraction needed',
-            district: region === 'panchkula' ? 'Panchkula' : 'Gurugram',
-            status: 'Error',
-            url: baseUrl,
-            extractedAt: new Date().toISOString()
-          }];
+          return [];
         }
         
+        console.log('✅ Excel button clicked! Waiting for download...');
+        await this.delay(10000);
+        
+        // Find downloaded Excel file
+        const files = fs.readdirSync(this.downloadDir);
+        const excelFiles = files.filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
+        if (excelFiles.length === 0) {
+          console.log('❌ No Excel file found');
+          return [];
+        }
+        
+        const latestFile = excelFiles
+          .map(f => ({ name: f, time: fs.statSync(path.join(this.downloadDir, f)).mtimeMs }))
+          .sort((a, b) => b.time - a.time)[0].name;
+        const filePath = path.join(this.downloadDir, latestFile);
+        console.log(`📥 Downloaded file: ${latestFile}`);
+        
+        // Read data from Excel including hyperlinks
+        const excelData = await this.readExcelFileWithDetails(filePath, region);
+        
+        // Limit to maxRecords
+        const projectsToProcess = excelData.slice(0, maxRecords);
+        
+        // Scrape detailed info for each project using the URL from Excel
+        const enhancedProjects = [];
+        for (const project of projectsToProcess) {
+          console.log(`🔍 Fetching details for project: ${project.projectName}`);
+          if (project.detailUrl && (project.detailUrl.includes('view_project') || project.detailUrl.includes('project_preview_open'))) {
+            const detail = await this.scrapeProjectDetailPage(project.detailUrl);
+            if (detail) {
+              enhancedProjects.push({
+                ...project,
+                ...detail,
+                extractedAt: new Date().toISOString()
+              });
+            } else {
+              enhancedProjects.push(project);
+            }
+          } else {
+            console.warn(`⚠️ No valid detail URL for project: ${project.projectName} (URL: ${project.detailUrl})`);
+            enhancedProjects.push(project);
+          }
+          await this.delay(1500);
+        }
+        
+        // Filter by year if needed
+        let filtered = enhancedProjects;
+        if (filters.yearFrom && filters.yearTo) {
+          filtered = enhancedProjects.filter(p => p.year && p.year >= filters.yearFrom && p.year <= filters.yearTo);
+        }
+        
+        const finalProjects = filtered.slice(0, maxRecords);
+        console.log(`✅ Returning ${finalProjects.length} enhanced projects`);
+        return finalProjects.map(p => this.formatProject(p));
+        
       } finally {
-        await this.delay(2000);
         await browser.close();
       }
-      
     } catch (error) {
       console.error('Haryana scraper error:', error);
       return [];
@@ -163,118 +131,291 @@ class HaryanaScraper extends BaseScraper {
   }
   
   /**
-   * Read data from downloaded Excel file
+   * Read Excel file and extract all columns, including hyperlink from "Details of Project(Form A-H)"
+   * Handles both native Excel hyperlinks and HTML anchor tags.
    */
-  async readExcelFile(filePath, region) {
+  async readExcelFileWithDetails(filePath, region) {
     try {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.readFile(filePath);
-      
       const worksheet = workbook.worksheets[0];
       const projects = [];
       
-      // Get all rows
+      // Read rows including hyperlink data and raw cell objects
       const rows = [];
       worksheet.eachRow((row, rowNumber) => {
         const rowData = [];
-        row.eachCell((cell, colNumber) => {
-          rowData.push(cell.value ? cell.value.toString().trim() : '');
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          rowData.push({
+            value: cell.value ? cell.value.toString().trim() : '',
+            hyperlink: cell.hyperlink,
+            cell: cell
+          });
         });
         rows.push(rowData);
       });
       
-      if (rows.length < 2) {
-        console.log('No data rows found in Excel');
-        return [];
-      }
+      if (rows.length < 2) return [];
       
-      // Find header row (usually first row with "Serial No." or "Registration")
+      // Find header row
       let headerRowIndex = 0;
       let headers = [];
-      
       for (let i = 0; i < Math.min(5, rows.length); i++) {
-        const firstCell = rows[i][0] || '';
-        if (firstCell.includes('Serial') || firstCell.includes('Registration') || firstCell.includes('S.No')) {
+        const firstCellValue = rows[i][0]?.value || '';
+        if (firstCellValue.includes('Serial') || firstCellValue.includes('Registration') || firstCellValue.includes('S.No')) {
           headerRowIndex = i;
-          headers = rows[i];
+          headers = rows[i].map(cell => cell.value);
           break;
         }
       }
-      
       if (headers.length === 0) {
-        // Use first row as headers
-        headers = rows[0];
-        headerRowIndex = 0;
+        headers = rows[0].map(cell => cell.value);
       }
       
-      console.log('Excel headers:', headers.slice(0, 10));
-      
-      // Find column indices based on header text
+      // Map column indices
       const colMap = {
         serialNo: this.findColumnIndex(headers, ['serial', 's.no', 'sr no']),
         registrationNo: this.findColumnIndex(headers, ['registration', 'certificate', 'reg no']),
-        projectId: this.findColumnIndex(headers, ['project id', 'id']),
+        projectId: this.findColumnIndex(headers, ['project id']),
         projectName: this.findColumnIndex(headers, ['project name', 'project']),
         builder: this.findColumnIndex(headers, ['builder', 'promoter', 'developer']),
         location: this.findColumnIndex(headers, ['location', 'address']),
         district: this.findColumnIndex(headers, ['district']),
-        registeredWith: this.findColumnIndex(headers, ['registered with', 'authority']),
+        registeredWith: this.findColumnIndex(headers, ['registered with']),
+        detailUrl: this.findColumnIndex(headers, ['details of project', 'form a-h', 'form a']),
         registrationUpTo: this.findColumnIndex(headers, ['up-to', 'upto', 'valid till'])
       };
       
-      console.log('Column mapping:', colMap);
+      console.log('📊 Column mapping:', colMap);
+      console.log('📊 Headers found:', headers.slice(0, 10));
       
       // Process data rows
       for (let i = headerRowIndex + 1; i < rows.length; i++) {
         const row = rows[i];
         if (!row || row.length === 0) continue;
         
-        const registrationNo = row[colMap.registrationNo] || '';
-        const projectName = row[colMap.projectName] || '';
-        const builder = row[colMap.builder] || '';
-        const district = row[colMap.district] || '';
-        const location = row[colMap.location] || '';
-        const registeredWith = row[colMap.registeredWith] || '';
-        const registrationUpTo = row[colMap.registrationUpTo] || '';
+        const getCellValue = (idx) => (idx !== -1 && row[idx]) ? row[idx].value : '';
+        const getCellHyperlink = (idx) => (idx !== -1 && row[idx]) ? row[idx].hyperlink : null;
+        const getCellRaw = (idx) => (idx !== -1 && row[idx]) ? row[idx] : null;
         
-        // Skip empty rows
-        if (!registrationNo && !projectName) continue;
+        const registrationNo = getCellValue(colMap.registrationNo);
+        const projectName = getCellValue(colMap.projectName);
+        const builder = getCellValue(colMap.builder);
+        const district = getCellValue(colMap.district) || (region === 'panchkula' ? 'Panchkula' : 'Gurugram');
+        const location = getCellValue(colMap.location);
+        const registrationUpTo = getCellValue(colMap.registrationUpTo);
         
-        // Skip password policy rows
-        if (projectName.includes('Password') || registrationNo.includes('Password')) continue;
-        
-        // Determine status
-        let status = 'Registered';
-        if (registrationUpTo && registrationUpTo !== '--' && registrationUpTo !== '-') {
-          const upToDate = new Date(registrationUpTo);
-          const today = new Date();
-          if (!isNaN(upToDate) && upToDate < today) {
-            status = 'Expired';
+        // 🔥 Extract detail URL with enhanced logic
+        let detailUrl = '';
+        if (colMap.detailUrl !== -1) {
+          const cellData = getCellRaw(colMap.detailUrl);
+          if (cellData) {
+            // 1. Try to get hyperlink property (native Excel hyperlink)
+            if (cellData.hyperlink && cellData.hyperlink.address) {
+              detailUrl = cellData.hyperlink.address;
+            }
+            // 2. Try to extract href from HTML anchor tag (if stored as HTML string)
+            else if (typeof cellData.value === 'string') {
+              // Match href="..." or href='...'
+              const hrefMatch = cellData.value.match(/href=["']([^"']+)["']/i);
+              if (hrefMatch) {
+                detailUrl = hrefMatch[1];
+              }
+              // Also try to find any URL in the string
+              else {
+                const urlMatch = cellData.value.match(/(https?:\/\/[^\s]+)/i);
+                if (urlMatch) detailUrl = urlMatch[1];
+              }
+            }
+            // 3. If cell contains just a numeric ID, construct URL
+            else if (/^\d+$/.test(String(cellData.value))) {
+              detailUrl = `https://haryanarera.gov.in/view_project/project_preview_open/${cellData.value}`;
+              print(`  🔧 Constructed detail URL from numeric ID: ${detailUrl}`);
+            }
           }
         }
         
-        // Extract year from registration number
+        if (!registrationNo && !projectName) continue;
+        if (projectName.includes('Password') || registrationNo.includes('Password')) continue;
+        
+        let status = 'Registered';
+        if (registrationUpTo && registrationUpTo !== '--' && registrationUpTo !== '-') {
+          const upToDate = new Date(registrationUpTo);
+          if (!isNaN(upToDate) && upToDate < new Date()) status = 'Expired';
+        }
+        
         const yearMatch = registrationNo.match(/20\d{2}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
         
         projects.push({
-          name: projectName || 'N/A',
-          promoter: builder || registeredWith || 'N/A',
-          registrationNo: registrationNo,
-          district: district || (region === 'panchkula' ? 'Panchkula' : 'Gurugram'),
-          location: location || 'N/A',
+          projectName: projectName || 'N/A',
+          promoterName: builder || 'N/A',
+          registrationNumber: registrationNo,
+          district: district,
+          location: location,
           status: status,
           registrationUpTo: registrationUpTo,
-          year: year
+          year: year,
+          detailUrl: detailUrl || null,
+          registeredWith: getCellValue(colMap.registeredWith) || ''
         });
       }
       
       console.log(`📊 Read ${projects.length} projects from Excel file`);
+      const projectsWithUrls = projects.filter(p => p.detailUrl).length;
+      console.log(`📊 Projects with detail URLs: ${projectsWithUrls}`);
       return projects;
       
     } catch (error) {
-      console.error('Error reading Excel file:', error);
+      console.error('Error reading Excel:', error);
       return [];
+    }
+  }
+  
+  /**
+   * Scrape detailed project page (including Form A-H) using the direct URL
+   */
+  async scrapeProjectDetailPage(detailUrl) {
+    // Validate URL format
+    if (!detailUrl || (!detailUrl.includes('view_project') && !detailUrl.includes('project_preview_open'))) {
+      console.log(`  ⚠️ Skipping invalid detail URL: ${detailUrl}`);
+      return null;
+    }
+    
+    console.log(`  → Fetching detail page: ${detailUrl}`);
+    
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+    
+    try {
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      await page.goto(detailUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+      
+      // Wait for dynamic content
+      await page.waitForSelector('body', { timeout: 10000 });
+      await this.delay(3000);
+      
+      // Extract comprehensive details including Form A-H
+      const details = await page.evaluate(() => {
+        const data = {
+          formAtoH: {},
+          projectInfo: {},
+          documents: []
+        };
+        
+        const cleanText = (text) => text.replace(/\s+/g, ' ').trim();
+        
+        // Find all tables with Form content
+        const tables = document.querySelectorAll('table');
+        tables.forEach((table) => {
+          const tableText = table.innerText;
+          if (tableText.includes('Form A') || tableText.includes('Form B') ||
+              tableText.includes('Form C') || tableText.includes('Form D') ||
+              tableText.includes('Form E') || tableText.includes('Form F') ||
+              tableText.includes('Form G') || tableText.includes('Form H') ||
+              tableText.includes('Project Details') || tableText.includes('Particulars')) {
+            
+            const rows = table.querySelectorAll('tr');
+            rows.forEach(row => {
+              const cells = row.querySelectorAll('td, th');
+              if (cells.length >= 2) {
+                const key = cleanText(cells[0].innerText);
+                const value = cleanText(cells[1].innerText);
+                if (key && value && !key.includes('Form') && !key.includes('S.No')) {
+                  data.formAtoH[key] = value;
+                }
+              } else if (cells.length === 1) {
+                const header = cleanText(cells[0].innerText);
+                if (header && (header.includes('Form') || header.includes('Details'))) {
+                  data.formAtoH[`_section_${header}`] = true;
+                }
+              }
+            });
+          }
+        });
+        
+        // Extract from definition lists
+        const dlElements = document.querySelectorAll('dl, .detail-row, .info-row, .project-detail');
+        dlElements.forEach(el => {
+          const label = el.querySelector('dt, .label, .title, strong:first-child');
+          const value = el.querySelector('dd, .value, .content, span:last-child');
+          if (label && value) {
+            data.projectInfo[cleanText(label.innerText)] = cleanText(value.innerText);
+          }
+        });
+        
+        // Extract from div pairs
+        const divPairs = document.querySelectorAll('.form-group, .detail-item, .info-item');
+        divPairs.forEach(el => {
+          const label = el.querySelector('.label, .title, .field-label');
+          const value = el.querySelector('.value, .content, .field-value');
+          if (label && value) {
+            data.projectInfo[cleanText(label.innerText)] = cleanText(value.innerText);
+          }
+        });
+        
+        // Extract key fields using regex
+        const bodyText = document.body.innerText;
+        const patterns = {
+          tempProjectId: /Temp(?:orary)?\s+Project\s+ID\s*:\s*([^\n]+)/i,
+          submissionDate: /Submission\s+Date\s*:\s*([^\n]+)/i,
+          applicantType: /Applicant\s+Type\s*:\s*([^\n]+)/i,
+          projectType: /Project\s+Type\s*:\s*([^\n]+)/i,
+          promoterName: /PROMOTER\s*:\s*([^\n]+)/i,
+          totalArea: /Total\s+Area\s*:\s*([^\n]+)/i,
+          projectStatus: /Status\s*:\s*([^\n]+)/i,
+          registrationDate: /Registration\s+Date\s*:\s*([^\n]+)/i,
+          completionDate: /Completion\s+Date\s*:\s*([^\n]+)/i,
+          projectAddress: /Project\s+Address\s*:\s*([^\n]+)/i,
+          landArea: /Land\s+Area\s*:\s*([^\n]+)/i
+        };
+        
+        for (const [key, pattern] of Object.entries(patterns)) {
+          const match = bodyText.match(pattern);
+          if (match) data.projectInfo[key] = cleanText(match[1]);
+        }
+        
+        // Extract document links
+        const links = document.querySelectorAll('a');
+        links.forEach(link => {
+          const href = link.getAttribute('href');
+          const text = cleanText(link.innerText);
+          if (href && (text.includes('View') || text.includes('Download') || text.includes('Certificate') ||
+                       text.includes('Form') || text.includes('Document'))) {
+            data.documents.push({
+              name: text,
+              url: href.startsWith('http') ? href : `https://haryanarera.gov.in${href.startsWith('/') ? '' : '/'}${href}`
+            });
+          }
+        });
+        
+        return data;
+      });
+      
+      return {
+        url: detailUrl,
+        tempProjectId: details.projectInfo.tempProjectId || '',
+        submissionDate: details.projectInfo.submissionDate || '',
+        applicantType: details.projectInfo.applicantType || '',
+        projectType: details.projectInfo.projectType || '',
+        promoterName: details.projectInfo.promoterName || '',
+        totalArea: details.projectInfo.totalArea || '',
+        projectStatus: details.projectInfo.projectStatus || '',
+        registrationDate: details.projectInfo.registrationDate || '',
+        completionDate: details.projectInfo.completionDate || '',
+        projectAddress: details.projectInfo.projectAddress || '',
+        landArea: details.projectInfo.landArea || '',
+        formDetails: details.formAtoH,
+        otherDetails: details.projectInfo,
+        documents: details.documents
+      };
+      
+    } catch (error) {
+      console.error(`Error scraping ${detailUrl}:`, error.message);
+      return null;
+    } finally {
+      await browser.close();
     }
   }
   
@@ -290,30 +431,40 @@ class HaryanaScraper extends BaseScraper {
         }
       }
     }
-    return 1; // Default fallback
+    return -1;
   }
   
   /**
-   * Format project to standard format
+   * Format project to standard output
    */
   formatProject(project) {
     return {
-      projectName: project.name,
-      promoterName: project.promoter,
-      registrationNumber: project.registrationNo,
-      district: project.district,
-      status: project.status,
-      totalArea: project.location || 'N/A',
-      url: 'https://haryanarera.gov.in/',
-      extractedAt: new Date().toISOString(),
+      projectName: project.projectName || 'N/A',
+      promoterName: project.promoterName || 'N/A',
+      registrationNumber: project.registrationNumber || 'N/A',
+      district: project.district || 'N/A',
+      status: project.status || 'Registered',
+      totalArea: project.totalArea || project.location || 'N/A',
+      url: project.detailUrl || 'https://haryanarera.gov.in/',
+      extractedAt: project.extractedAt || new Date().toISOString(),
       registrationUpTo: project.registrationUpTo || 'N/A',
-      year: project.year || 'N/A'
+      year: project.year || 'N/A',
+      tempProjectId: project.tempProjectId || 'N/A',
+      submissionDate: project.submissionDate || 'N/A',
+      applicantType: project.applicantType || 'N/A',
+      projectType: project.projectType || 'N/A',
+      projectStatus: project.projectStatus || project.status,
+      registrationDate: project.registrationDate || 'N/A',
+      completionDate: project.completionDate || 'N/A',
+      projectAddress: project.projectAddress || 'N/A',
+      landArea: project.landArea || 'N/A',
+      registeredWith: project.registeredWith || 'N/A',
+      formDetails: project.formDetails || {},
+      otherDetails: project.otherDetails || {},
+      documents: project.documents || []
     };
   }
   
-  /**
-   * Delay helper
-   */
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
